@@ -55,6 +55,24 @@ jobs:
           test -f buildroot-external/board/allwinner/h618box/sun50i-h618-easybox.dts
           test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-provision
 
+      - name: Patch buildroot uboot dep (rockchip-blobs → arm-trusted-firmware)
+        working-directory: haos
+        run: |
+          # fork 的 uboot.mk 把 ATF_BL31 的依赖硬编码为 rockchip-blobs（瑞芯微盒子），
+          # Allwinner 的 bl31 应来自 arm-trusted-firmware。带断言替换，改不动就报错。
+          python3 - <<'PYEOF'
+          import re
+          p = 'boot/uboot/uboot.mk'
+          s = open(p, encoding='utf-8').read()
+          new, n = re.subn(
+              r"(BR2_TARGET_UBOOT_NEEDS_ATF_BL31\),y\n\t?)UBOOT_DEPENDENCIES \+= rockchip-blobs",
+              r"\1UBOOT_DEPENDENCIES += arm-trusted-firmware",
+              s, count=1)
+          assert n == 1, "uboot.mk 的 rockchip-blobs 依赖未找到——上游结构变了，需要人工复核"
+          open(p, 'w', encoding='utf-8').write(new)
+          print("uboot.mk 依赖已改接 arm-trusted-firmware")
+          PYEOF
+
       - name: Build h618_box
         working-directory: haos
         run: |
