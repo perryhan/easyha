@@ -37,6 +37,7 @@ jobs:
             /cache/cc
           key: haos-h618-${{ github.run_id }}
           restore-keys: haos-h618-
+          save-always: true
 
       - name: Clone upstream operating-system
         run: |
