@@ -32,5 +32,4 @@ jobs:
           args: |
             --aarch64 \
             --amd64 \
-            --token ${{ secrets.GITHUB_TOKEN }} \
             ${{ github.workspace }}/addons /data

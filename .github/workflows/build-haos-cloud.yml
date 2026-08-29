@@ -46,12 +46,13 @@ jobs:
       - name: Overlay machine files
         working-directory: haos
         run: |
-          # 在 haos/ 目录内执行：把机器文件叠加进官方树
-          rsync -a ../build/haos-h618/fork-files/ .
+          # fork-files/ 的目录结构与 buildroot-external/ 一一对应
+          rsync -a ../build/haos-h618/fork-files/ buildroot-external/
           echo "=== 确认机器文件落位 ==="
           ls buildroot-external/configs/ | grep h618_box
           test -f buildroot-external/board/allwinner/h618box/meta
           test -f buildroot-external/board/allwinner/h618box/sun50i-h618-easybox.dts
+          test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-provision
 
       - name: Build h618_box
         working-directory: haos
