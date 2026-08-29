@@ -1,0 +1,42 @@
+# 【正式路线】从源码构建 H618 定制 HAOS（自建 machine）
+#
+# 决策（2026-08-29）：不走冬瓜 fork（授权不可得），fork 官方
+# home-assistant/operating-system，加入本仓库 build/haos-h618/fork-files/
+# 定义的 h618_box machine。
+#
+# 构建有两条路：
+#   A. fork 自带 CI：官方仓库 .github/workflows/ 自带镜像构建流水线，
+#      fork 后放入 machine 文件、推送 tag 即可在 GitHub 上出镜像（推荐）。
+#   B. 本机构建：Linux + 官方 Docker 构建容器（约 40GB 磁盘、数小时），
+#      步骤见 build/haos-h618/README.md「开发流程」。
+#
+# 本 workflow 仅用于自建 Linux 构建机 / 大盘 CI runner（路线 B）：
+name: Build HAOS h618_box (self-hosted)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # 需要至少 40GB 磁盘：大盘 CI runner 或自托管 Linux
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 360
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/operating-system
+          fetch-depth: 0
+
+      - name: Build h618_box image
+        run: |
+          docker build -t hassos-builder .
+          docker run --rm --privileged -v "$(pwd):/build" hassos-builder \
+            bash -c "make h618_box"
+
+      - name: Upload images
+        uses: actions/upload-artifact@v4
+        with:
+          name: hassos-h618-box
+          path: build/output/images/*.img.xz
+          retention-days: 14

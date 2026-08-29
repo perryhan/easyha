@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>易家面板 · 演示</title>
+<style>
+  body {
+    margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8; color: #1a1d21;
+  }
+  .demo-bar {
+    background: #111827; color: #e5e7eb; font-size: 12px; padding: 6px 14px;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .demo-bar b { color: #fbbf24; }
+  .demo-bar a { color: #93c5fd; text-decoration: none; }
+  easyha-panel { --primary-color: #2f6bff; --card-bg-color: #fff;
+    --primary-text-color: #1a1d21; --secondary-text-color: #6b7280;
+    --divider-color: #e8eaee; --secondary-background-color: #f2f3f5; }
+  ha-icon { font-size: 18px; line-height: 1; }
+</style>
+</head>
+<body>
+<div class="demo-bar">
+  <b>演示环境</b><span>模拟 hass 对象驱动真实面板模块（easyha-panel.js）</span>
+  <a href="/">返回初始化向导</a><a href="/api/demo/reset" target="_blank">重置向导</a>
+</div>
+<easyha-panel id="p"></easyha-panel>
+
+<!-- 真实产品中该模块由 HA 的 panel_custom(module_url) 加载，这里是同一份文件 -->
+<script src="/app.js"></script>
+<script>
+/* 独立演示时 ha-icon 不存在（真实运行在 HA 前端内，自带 MDI 图标），给个 emoji 替身 */
+class HaIcon extends HTMLElement {
+  connectedCallback() {
+    const map = {
+      'mdi:lightbulb': '💡', 'mdi:toggle-switch': '🔌', 'mdi:fan': '🌀',
+      'mdi:air-conditioner': '❄️', 'mdi:window-open-variant': '🪟',
+      'mdi:air-humidifier': '💧', 'mdi:speaker': '📺', 'mdi:robot-vacuum': '🤖',
+      'mdi:lock': '🔒', 'mdi:radar': '🚪', 'mdi:gauge': '🌡️', 'mdi:cctv': '📹',
+    };
+    this.textContent = map[this.getAttribute('icon') || ''] || '●';
+  }
+}
+customElements.define('ha-icon', HaIcon);
+
+/* ---------------- 模拟 hass（真实产品里由 HA 前端注入，含认证/WS） ---------------- */
+const areas = [
+  { area_id: 'living', name: '客厅' },
+  { area_id: 'bedroom', name: '卧室' },
+  { area_id: 'entry', name: '玄关' },
+];
+const entitiesReg = [
+  { entity_id: 'light.living_ceiling', area_id: 'living' },
+  { entity_id: 'light.living_strip', area_id: 'living' },
+  { entity_id: 'fan.living_fan', area_id: 'living' },
+  { entity_id: 'climate.living_ac', area_id: 'living' },
+  { entity_id: 'cover.living_curtain', area_id: 'living' },
+  { entity_id: 'media_player.living_tv', area_id: 'living' },
+  { entity_id: 'switch.tv_plug', area_id: 'living' },
+  { entity_id: 'light.bed_ceiling', area_id: 'bedroom' },
+  { entity_id: 'humidifier.bed_humidifier', area_id: 'bedroom' },
+  { entity_id: 'lock.front_door', area_id: 'entry' },
+  { entity_id: 'binary_sensor.front_door', area_id: 'entry' },
+  /* 扫地机器人未分配房间 → 演示「未分配」分组 */
+];
+const devicesReg = [];
+
+const states = {
+  'light.living_ceiling': { entity_id: 'light.living_ceiling', state: 'on', attributes: { friendly_name: '客厅吸顶灯' } },
+  'light.living_strip': { entity_id: 'light.living_strip', state: 'off', attributes: { friendly_name: '客厅灯带' } },
+  'light.bed_ceiling': { entity_id: 'light.bed_ceiling', state: 'off', attributes: { friendly_name: '卧室吸顶灯' } },
+  'switch.tv_plug': { entity_id: 'switch.tv_plug', state: 'on', attributes: { friendly_name: '电视柜插座' } },
+  'fan.living_fan': { entity_id: 'fan.living_fan', state: 'on', attributes: { friendly_name: '客厅循环扇' } },
+  'climate.living_ac': { entity_id: 'climate.living_ac', state: 'cool', attributes: { friendly_name: '客厅空调', current_temperature: 26.8, temperature: 24 } },
+  'cover.living_curtain': { entity_id: 'cover.living_curtain', state: 'open', attributes: { friendly_name: '客厅窗帘' } },
+  'media_player.living_tv': { entity_id: 'media_player.living_tv', state: 'playing', attributes: { friendly_name: '客厅电视' } },
+  'vacuum.mijia_vacuum': { entity_id: 'vacuum.mijia_vacuum', state: 'cleaning', attributes: { friendly_name: '米家扫拖机器人' } },
+  'humidifier.bed_humidifier': { entity_id: 'humidifier.bed_humidifier', state: 'on', attributes: { friendly_name: '卧室加湿器' } },
+  'sensor.living_temp': { entity_id: 'sensor.living_temp', state: '23.4', attributes: { friendly_name: '客厅温度', unit_of_measurement: '°C', device_class: 'temperature' } },
+  'binary_sensor.front_door': { entity_id: 'binary_sensor.front_door', state: 'off', attributes: { friendly_name: '大门传感器', device_class: 'door' } },
+  'lock.front_door': { entity_id: 'lock.front_door', state: 'unlocked', attributes: { friendly_name: '大门智能锁' } },
+};
+
+const hass = {
+  user: { name: '爸爸' },
+  config: { location_name: '我的家' },
+  states,
+  callService(domain, service, data) {
+    const s = states[data.entity_id];
+    if (!s) return;
+    if (domain === 'homeassistant' && service === 'toggle') {
+      s.state = ['on', 'playing', 'open', 'cool', 'heat', 'unlocked'].includes(s.state) ? 'off' : 'on';
+      if (s.state === 'on' && s.entity_id === 'media_player.living_tv') s.state = 'playing';
+      if (s.state === 'on' && s.entity_id === 'climate.living_ac') s.state = 'cool';
+    } else if (domain === 'climate' && service === 'set_temperature') {
+      s.attributes.temperature = data.temperature;
+    } else if (domain === 'cover') {
+      s.state = service === 'open_cover' ? 'open' : 'closed';
+    } else if (domain === 'media_player') {
+      s.state = s.state === 'playing' ? 'paused' : 'playing';
+    } else if (domain === 'vacuum') {
+      s.state = service === 'start' ? 'cleaning' : 'docked';
+    } else if (domain === 'lock') {
+      s.state = service === 'lock' ? 'locked' : 'unlocked';
+    }
+    /* 真实 HA 会推送新 hass 对象 → 触发面板重渲染 */
+    el.hass = hass;
+  },
+  connection: {
+    sendMessagePromise(msg) {
+      switch (msg.type) {
+        case 'config/area_registry/list': return Promise.resolve(areas);
+        case 'config/entity_registry/list': return Promise.resolve(entitiesReg);
+        case 'config/device_registry/list': return Promise.resolve(devicesReg);
+        default: return Promise.resolve([]);
+      }
+    },
+  },
+};
+
+const el = document.getElementById('p');
+el.panel = { config: {} };
+el.narrow = false;
+el.hass = hass;
+</script>
+</body>
+</html>

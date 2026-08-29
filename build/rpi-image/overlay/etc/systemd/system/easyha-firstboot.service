@@ -1,0 +1,15 @@
+[Unit]
+Description=EasyHA 易家首次开机引导（配网 + 自动装机）
+After=NetworkManager.service docker.service
+Wants=NetworkManager.service
+ConditionPathExists=!/var/lib/easyha/.provisioned
+
+[Service]
+Type=oneshot
+ExecStart=/opt/easyha/firstboot.sh
+TimeoutStartSec=2h
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

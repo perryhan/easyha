@@ -1,0 +1,37 @@
+# 构建 EasyHA 定制镜像（路线 B：树莓派 OS Lite + HA Supervised）
+# 使用 GitHub 免费的 ARM64 runner，无需 qemu
+name: Build EasyHA image (rpi4-64)
+
+on:
+  push:
+    branches: [main]
+    paths: ["build/rpi-image/**", "templates/**", "addons/easy-setup/rootfs/www/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            curl xz-utils parted dosfstools e2fsprogs kpartx udev
+
+      - name: Build image
+        working-directory: build/rpi-image
+        run: sudo ./build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: easyha-rpi4-64
+          path: build/rpi-image/out/*.img.xz
+          retention-days: 14
+
+      # 需要正式发布时，创建 tag 并在 Release 中附上产物：
+      #   gh release create v1.0.0 build/rpi-image/out/*.img.xz

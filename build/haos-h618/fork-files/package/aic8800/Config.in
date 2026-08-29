@@ -1,0 +1,9 @@
+config BR2_PACKAGE_AIC8800
+	bool "aic8800 (AIC8801 USB WiFi out-of-tree driver, 测试期)"
+	depends on BR2_LINUX_KERNEL
+	help
+	  ⚠️ 分工：驱动编译/USB MSC→WLAN 模式切换由另一任务负责，
+	  本包只保留 Buildroot 集成位（Kconfig/固件安装钩子），
+	  驱动源由该任务交付后替换 aic8800.mk 的 SITE。
+	  本板 AIC8801 为 USB 形态（a69c:5721，默认枚举 MSC U 盘模式）。
+	  量产换 SDIO 主线模组（AP6256/RTL8822CS/RTL8723DS）后删除本包。

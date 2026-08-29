@@ -1,0 +1,183 @@
+// ============================================================
+// EasyHA H618 盒子 · 设备树（事实版）
+// 内核侧放置：arch/arm64/boot/dts/allwinner/sun50i-h618-easybox.dts
+//
+// 数据来源：参照系统（冬瓜 HAOS 18.1）的 sun50i-h618-pcdn.dtb 反编译
+// （pcdn-reference.dts），全部引脚/电压/时延为该公板实测值，非猜测。
+//
+// ⚠️ 编译对齐：&emac0/&usb_otg/&ehciN 等 label 名以目标内核的
+//    sun50i-h616.dtsi 实际定义为准（首次 make linux 会暴露不一致，逐个对齐即可）；
+//    H616 host 控制器为 musb@5100000 + ehci/ohci @5101000、@5200000、@5310000。
+// 硬件事实（H618 PCDN 公版）：
+//   PMIC = AXP313a (i2c0 @0x36)，DRAM 供电 dcdc3=1.356V → DDR3L
+//   eMMC = Foresee NG2M212 128GB（DDR52 3.3V 模式，非 HS200）
+//   网口 = RTL8211F 千兆 @ EMAC0（rgmii, rx-delay 3100ps / tx-delay 700ps）
+//   WiFi = AIC8801 USB 模组（无 SDIO 节点，走 USB 总线）
+//   串口 = UART0 PH0/PH1 115200（调试控制台）
+//   USB  = musb(host) + 3×EHCI/OHCI 全 host
+// ============================================================
+
+/dts-v1/;
+#include "sun50i-h616.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+	model = "EasyHA Box (H618 PCDN 公版)";
+	compatible = "easyha,h618-box", "allwinner,sun50i-h618";
+
+	aliases {
+		ethernet0 = &emac0;
+		serial0 = &uart0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	/* 板载固定供轨（PMIC 之外的 5V/3.3V 主轨，always-on） */
+	vcc5v: vcc5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+	};
+
+	vcc3v3: vcc3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+};
+
+/* ---- 调试串口：UART0 @ PH0/PH1（与 cmdline.txt console=ttyS0,115200 一致） ---- */
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_ph_pins>;
+	status = "okay";
+};
+
+/* ---- PMIC：AXP313a（i2c0 = 5002c00），全轨电压取自参照 DTB ---- */
+&i2c0 {
+	status = "okay";
+	pmic@36 {
+		compatible = "x-powers,axp313a";
+		reg = <0x36>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+
+		regulators {
+			aldo1: aldo1 {
+				regulator-always-on;
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-name = "vcc-1v8-pll";
+			};
+			dldo1: dldo1 {
+				regulator-always-on;
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-name = "vcc-3v3-io-mmc";
+			};
+			dcdc1: dcdc1 {
+				regulator-always-on;
+				regulator-min-microvolt = <810000>;
+				regulator-max-microvolt = <990000>;
+				regulator-name = "vdd-cpu";
+			};
+			dcdc2: dcdc2 {
+				regulator-always-on;
+				regulator-min-microvolt = <810000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-name = "vdd-cpu";
+			};
+			dcdc3: dcdc3 {
+				regulator-always-on;
+				regulator-min-microvolt = <1356000>;
+				regulator-max-microvolt = <1356000>;
+				regulator-name = "vdd-dram";   /* 1.356V → DDR3L */
+			};
+		};
+	};
+};
+
+/* ---- TF 卡（mmc0）：PF6 插拔检测（低电平插入） ---- */
+&mmc0 {
+	vmmc-supply = <&dldo1>;
+	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;	/* PF6 */
+	bus-width = <4>;
+	status = "okay";
+};
+
+/* ---- eMMC（mmc2）：Foresee NG2M212 128GB，DDR52 @150MHz（非 HS200，照抄参照） ---- */
+&mmc2 {
+	vmmc-supply = <&dldo1>;
+	vqmmc-supply = <&dldo1>;
+	bus-width = <8>;
+	non-removable;
+	cap-mmc-highspeed;
+	mmc-ddr-3_3v;
+	max-frequency = <150000000>;
+	status = "okay";
+};
+
+/* ---- 千兆网口：EMAC0 + RTL8211F（rgmii，时延按实测） ---- */
+&emac0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&rgmii_pins>;
+	phy-mode = "rgmii";
+	phy-handle = <&ext_rgmii_phy>;
+	allwinner,rx-delay-ps = <3100>;
+	allwinner,tx-delay-ps = <700>;
+	phy-supply = <&vcc3v3>;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ext_rgmii_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+		};
+	};
+};
+
+/* ---- USB：musb(host) + 3×EHCI/OHCI，全 host（AIC8801 插在任一端口） ---- */
+&usb_otg {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&usbphye {
+	status = "okay";
+};
+
+&ehci0 { status = "okay"; };
+&ohci0 { status = "okay"; };
+&ehci1 { status = "okay"; };
+&ohci1 { status = "okay"; };
+&ehci2 { status = "okay"; };
+&ohci2 { status = "okay"; };
+&ehci3 { status = "okay"; };
+&ohci3 { status = "okay"; };
+
+/* ---- HDMI（显示/CEC）：主线驱动支持，保留 ---- */
+&hdmi {
+	status = "okay";
+};
+&hdmi_audio {
+	status = "okay";
+};
+
+/* ---- 红外接收（遥控器），保留 ---- */
+&ir {
+	status = "okay";
+};
+
+/* ---- 音频片上 codec/AHUB：参照内核带 Allwinner 厂商补丁（ahub/cedrus 等），
+        纯主线内核暂不可用。HA 盒子非必需，首版不启用；需要时再评估厂商补丁 ---- */

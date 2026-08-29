@@ -1,0 +1,71 @@
+# EasyHA 一键配置插件 —— HA Add-on 元数据
+name: EasyHA 一键配置
+version: "1.0.0"
+slug: easy_setup
+description: 扫码连 WiFi 配网、简化初始化向导、自动安装主流插件与设备识别（中国优化）
+arch:
+  - aarch64
+  - armv7
+  - amd64
+url: https://github.com/easyha/easyha
+startup: services
+boot: auto
+init: false
+advanced: false
+stage: stable
+
+# 需要访问宿主机 NetworkManager（D-Bus）来开热点/连 WiFi
+host_dbus: true
+# 与宿主共享网络栈：门户直接监听宿主 80 端口，手机连热点后可达
+host_network: true
+privileged:
+  - NET_ADMIN
+
+# 读写 HA 配置目录：安装自定义组件（xiaomi_miot/HACS）、写入易家面板
+map:
+  - config:rw
+  - share:rw
+
+# 调 Supervisor / HA 官方 API 完成一切后端工作（后端不自研的关键）
+hassio_api: true
+hassio_role: admin
+homeassistant_api: true
+
+ports:
+  80/tcp: 80
+webui: http://[HOST]:[PORT:80]
+
+options:
+  language: zh
+  timezone: Asia/Shanghai
+  ap_ssid: EasyHA-Setup
+  # 为空则热点免密（推荐，配置窗口极短）；要更稳可设 8 位以上密码
+  ap_password: ""
+  auto_start_ap: true
+  china_mirrors:
+    - "https://ghfast.top/"
+    - "https://gh-proxy.com/"
+    - "https://mirror.ghproxy.com/"
+    - ""
+  install_hacs: true
+  install_addons:
+    - core_configurator
+    - core_samba
+    - core_ssh
+  # 家庭 WiFi 免登录（anyone on LAN 自动登录管理员）
+  trusted_lan_login: true
+  home_name: 易家
+
+schema:
+  language: list(zh|en)
+  timezone: str
+  ap_ssid: str
+  ap_password: str?
+  auto_start_ap: bool
+  china_mirrors: [str]
+  install_hacs: bool
+  install_addons: [str]
+  trusted_lan_login: bool
+  home_name: str
+
+image: ghcr.io/easyha/easy-setup-{arch}

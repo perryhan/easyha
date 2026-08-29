@@ -1,0 +1,3 @@
+# EasyHA H618 公版 · HAOS 启动参数注入（生成 haos-config.txt）
+# 需要额外 bootargs/overlay 时在这里加，如：
+#overlays=rpi-rf-mod

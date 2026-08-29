@@ -1,0 +1,17 @@
+[Unit]
+Description=EasyHA 易家 · 系统级首次配网与自动装机
+# 在 Supervisor 之前就位：无网时直接在宿主 NetworkManager 上开热点门户
+After=NetworkManager.service
+Wants=NetworkManager.service
+Before=hassio-supervisor.service
+ConditionPathExists=!/mnt/data/easyha/.provisioned
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/easyha-provision
+TimeoutStartSec=2h
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

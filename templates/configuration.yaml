@@ -1,0 +1,43 @@
+# ============================================================
+# EasyHA 易家 · 中国优化 Home Assistant 基础配置模板
+# 用法：首次启动前放入 HA 配置目录（configuration.yaml）。
+#       autoplugin 只会「合并」关键键值，不会覆盖用户已有配置。
+# ============================================================
+
+default_config:
+
+homeassistant:
+  name: 易家
+  latitude: 39.9042
+  longitude: 116.4074
+  elevation: 50
+  unit_system: metric
+  time_zone: Asia/Shanghai
+  # 温度/天气单位等保持公制；内置的中国友好的默认值由向导写入
+
+# 局域网免登录（米家级体验：手机连上家里 WiFi 打开 :8123 直接进）
+# 子网由 autoplugin 按设备实际 IP 自动探测后写入，这里先留占位
+http:
+  server_host: 0.0.0.0
+  # trusted_networks:
+  #   - 192.168.1.0/24
+  # trusted_networks_allow_bypass_login: true
+
+# 「易家」面板（米家式首页，重写后的网页结构）
+panel_custom:
+  - name: easyha
+    sidebar_title: 易家
+    sidebar_icon: mdi:home-heart
+    url_path: easyha
+    module_url: /local/easyha/app.js
+    config:
+      language: zh-Hans
+
+# 打开发现能力（自动识别局域网设备：小米、yeelight、Hue、DLNA 等）
+ssdp:
+zeroconf:
+dhcp:
+discovery:
+
+# 小米生态常用组件通过 HACS/自定义组件安装（xiaomi_miot），配置走配置流，
+# 向导会引导用户绑定小米账号，无需写死 yaml。

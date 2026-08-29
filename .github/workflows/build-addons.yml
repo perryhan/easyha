@@ -1,0 +1,35 @@
+# 构建 EasyHA 插件镜像并发布到 ghcr.io
+# 发布后：HAOS 用户在插件商店添加本仓库即可在线安装
+name: Build add-on images
+
+on:
+  push:
+    branches: [main]
+    paths: ["addons/**", ".github/workflows/build-addons.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 若需同时发布到国内镜像仓库（如阿里云 ACR），再登录一次并在 args 里加 --registry
+      - name: Build & push (all arch)
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --all \
+            --token ${{ secrets.GITHUB_TOKEN }} \
+            ${{ github.workspace }}/addons /data

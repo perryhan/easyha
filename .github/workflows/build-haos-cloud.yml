@@ -1,0 +1,74 @@
+# 云编译：在本仓库触发，克隆官方 operating-system（dev）+ 叠加 fork-files/ → 出 h618_box 镜像
+#
+# 注意：
+#  - 官方仓库自带 CI 用自托管 runner，fork 后默认不会跑，所以采用“克隆+叠加”方式在本仓库构建
+#  - GitHub 托管 runner 磁盘 ~14GB，先清理预装软件腾出 ~50GB；构建可能逼近 6h 上限，
+#    失败则重跑（dl/ccache 缓存会显著加速第二次）
+name: Build HAOS h618_box (cloud)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "build/haos-h618/fork-files/**"
+      - ".github/workflows/build-haos-cloud.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Checkout (easyha)
+        uses: actions/checkout@v4
+
+      - name: Free disk space (~50GB)
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/share/swift || true
+          docker image prune -af || true
+          df -h /
+
+      - name: Cache downloads & ccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /cache/dl
+            /cache/cc
+          key: haos-h618-${{ github.run_id }}
+          restore-keys: haos-h618-
+
+      - name: Clone upstream operating-system + overlay machine files
+        run: |
+          git clone --depth 1 --branch dev --recurse-submodules --shallow-submodules \
+            https://github.com/home-assistant/operating-system haos
+          cd haos
+          # 叠加我们的机器文件（repo 布局与官方一致，直接落位）
+          rsync -a ../build/haos-h618/fork-files/ .
+          git status --short | head -20
+          # HAOS 需要两个含反斜杠的文件名，Windows 之外无碍；官方树自带，勿删
+
+      - name: Build h618_box
+        working-directory: haos
+        run: |
+          docker build -t hassos-builder .
+          mkdir -p /cache/dl /cache/cc
+          docker run --rm --privileged \
+            -v "$(pwd):/build" -v /cache:/cache hassos-builder \
+            bash -c "make h618_box"
+
+      - name: Collect images
+        if: always()
+        run: |
+          mkdir -p out
+          find haos/build/output/images -name "*.img.xz" -exec cp {} out/ \; || true
+          ls -la out/
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hassos-h618-box
+          path: out/*.img.xz
+          retention-days: 14
+          if-no-files-found: warn

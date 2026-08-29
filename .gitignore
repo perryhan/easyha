@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+build/rpi-image/work/
+build/rpi-image/out/
+.DS_Store
+
+# 参照系统产物与原始取证（仅本地，不外发）
+build/haos-h618/uboot-spl-*.bin
+build/haos-h618/pcdn.dtb
+build/haos-h618/pcdn-reference.dts
+build/haos-h618/board-info-dump*.txt

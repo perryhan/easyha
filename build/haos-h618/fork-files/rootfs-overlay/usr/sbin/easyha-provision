@@ -1,0 +1,87 @@
+#!/bin/bash
+# ============================================================
+# EasyHA 易家 · 系统级首次配网与自动装机（HAOS 宿主版）
+# 放入 fork: buildroot-external/rootfs-overlay/usr/sbin/easyha-provision
+#
+# 门户与向导页面复用路线 B 的实现：
+#   /usr/sbin/easyha-portal.py  ← build/rpi-image/overlay/opt/easyha/preportal/server.py
+#   /usr/share/easyha/www/      ← addons/easy-setup/rootfs/www/
+#   /usr/share/easyha/configuration.yaml.seed ← templates/configuration.yaml
+# （在 fork 的 rootfs-overlay 里静态拷入，或由 haos-hook.sh 从本仓库拷贝）
+#
+# 流程：等网(45s) → 无网则开热点门户收 WiFi → 预置 HA 配置 →
+#        等 Supervisor → ha store add + 安装并启动 easy_setup 插件 → 标记完成
+# ============================================================
+set -u
+
+REPO_URL="${EASYHA_REPO:-https://github.com/easyha/easyha}"
+MARKER="/mnt/data/easyha/.provisioned"
+DONE_FLAG="/run/easyha/wifi.done"
+WLAN="${WIFI_IFACE:-wlan0}"
+
+log() { echo "[easyha-provision] $(date '+%F %T') $*"; }
+mkdir -p /run/easyha /mnt/data/easyha
+[[ -f "$MARKER" ]] && { log "已完成过，退出"; exit 0; }
+
+have_network() { [[ "$(nmcli networking connectivity 2>/dev/null)" == "full" ]]; }
+
+# ---------- 1. 配网 ----------
+log "等待以太网自检…"
+for _ in $(seq 1 15); do
+    nmcli -t -f TYPE,STATE device 2>/dev/null | grep -q '^ethernet:connected$' && break
+    sleep 3
+done
+
+if ! have_network; then
+    log "无网络，启动配网热点与门户（最长 40 分钟）"
+    rm -f "$DONE_FLAG"
+    AP_SSID="EasyHA-Setup" WIFI_IFACE="$WLAN" python3 /usr/sbin/easyha-portal.py \
+        >> /var/log/easyha-portal.log 2>&1 &
+    PORTAL_PID=$!
+    for _ in $(seq 1 800); do
+        [[ -f "$DONE_FLAG" ]] && break
+        have_network && break
+        sleep 3
+    done
+    kill "$PORTAL_PID" 2>/dev/null || true
+    rm -f "$DONE_FLAG"
+fi
+
+if ! have_network; then
+    log "仍未联网，重启后重试"
+    exit 0
+fi
+log "设备已联网 ✓"
+
+# ---------- 2. 预置 HA 配置（Supervisor 首启前写种子，不会被覆盖） ----------
+HA_CFG_DIR="/mnt/data/supervisor/homeassistant"
+if [[ ! -f "$HA_CFG_DIR/configuration.yaml" ]]; then
+    mkdir -p "$HA_CFG_DIR"
+    cp /usr/share/easyha/configuration.yaml.seed "$HA_CFG_DIR/configuration.yaml"
+    [[ -f "$HA_CFG_DIR/automations.yaml" ]] || echo "[]" > "$HA_CFG_DIR/automations.yaml"
+    [[ -f "$HA_CFG_DIR/scripts.yaml" ]] || echo "scripts: {}" > "$HA_CFG_DIR/scripts.yaml"
+    log "已预置中国优化 configuration.yaml"
+fi
+
+# ---------- 3. 等 Supervisor 就绪并自动装机 ----------
+log "等待 Supervisor 就绪（最长 45 分钟）…"
+ok=""
+for _ in $(seq 1 180); do
+    timeout 20 ha core info >/dev/null 2>&1 && { ok=1; break; }
+    sleep 15
+done
+[[ -z "$ok" ]] && { log "Supervisor 未就绪，下次启动重试"; exit 0; }
+
+log "注册插件仓库: $REPO_URL"
+for _ in 1 2 3; do
+    timeout 60 ha store add "$REPO_URL" && break
+    sleep 30
+done
+for _ in 1 2 3; do
+    timeout 900 ha addons install easy_setup && break
+    sleep 30
+done
+timeout 120 ha addons start easy_setup || true
+
+touch "$MARKER"
+log "引导完成 ✓  用户访问 http://easyha.local 进入初始化向导"
