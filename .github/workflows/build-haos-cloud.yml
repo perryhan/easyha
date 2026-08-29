@@ -38,15 +38,20 @@ jobs:
           key: haos-h618-${{ github.run_id }}
           restore-keys: haos-h618-
 
-      - name: Clone upstream operating-system + overlay machine files
+      - name: Clone upstream operating-system
         run: |
           git clone --depth 1 --branch dev --recurse-submodules --shallow-submodules \
             https://github.com/home-assistant/operating-system haos
-          cd haos
-          # 叠加我们的机器文件（repo 布局与官方一致，直接落位）
+
+      - name: Overlay machine files
+        working-directory: haos
+        run: |
+          # 在 haos/ 目录内执行：把机器文件叠加进官方树
           rsync -a ../build/haos-h618/fork-files/ .
-          git status --short | head -20
-          # HAOS 需要两个含反斜杠的文件名，Windows 之外无碍；官方树自带，勿删
+          echo "=== 确认机器文件落位 ==="
+          ls buildroot-external/configs/ | grep h618_box
+          test -f buildroot-external/board/allwinner/h618box/meta
+          test -f buildroot-external/board/allwinner/h618box/sun50i-h618-easybox.dts
 
       - name: Build h618_box
         working-directory: haos

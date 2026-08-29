@@ -31,7 +31,6 @@ jobs:
         with:
           args: |
             --aarch64 \
-            --armv7 \
             --amd64 \
             --token ${{ secrets.GITHUB_TOKEN }} \
             ${{ github.workspace }}/addons /data
