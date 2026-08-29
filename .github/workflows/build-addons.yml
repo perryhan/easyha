@@ -1,5 +1,6 @@
-# 构建 EasyHA 插件镜像并发布到 ghcr.io
-# 发布后：HAOS 用户在插件商店添加本仓库即可在线安装
+# 构建 EasyHA 插件镜像（buildx 多平台直推 ghcr）
+# 注：官方 home-assistant/builder action 已废弃且 CLI 变动频繁，改用 buildx 直构。
+#     产物与 builder 构建兼容（Supervisor 只按 image 名拉取）。
 name: Build add-on images
 
 on:
@@ -8,15 +9,36 @@ on:
     paths: ["addons/**", ".github/workflows/build-addons.yml"]
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        arch: [aarch64, amd64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare metadata
+        id: meta
+        run: |
+          VERSION=$(grep '^version:' addons/easy-setup/config.yml | awk '{print $2}' | tr -d '"')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to ghcr.io
         uses: docker/login-action@v3
@@ -25,11 +47,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 若需同时发布到国内镜像仓库（如阿里云 ACR），再登录一次并在 args 里加 --registry
-      - name: Build & push (all arch)
-        uses: home-assistant/builder@master
+      - name: Compute image name
+        id: img
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "name=${REGISTRY}/${OWNER}/easy-setup-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
         with:
-          args: |
-            --aarch64 \
-            --amd64 \
-            ${{ github.workspace }}/addons /data
+          context: addons/easy-setup
+          platforms: ${{ matrix.arch == 'aarch64' && 'linux/arm64' || 'linux/amd64' }}
+          push: true
+          build-args: |
+            BUILD_FROM=${{ matrix.arch == 'aarch64' && 'ghcr.io/hassio-addons/debian-base/aarch64:7.3.2' || 'ghcr.io/hassio-addons/debian-base/amd64:7.3.2' }}
+          tags: |
+            ${{ steps.img.outputs.name }}:${{ steps.meta.outputs.version }}
+            ${{ steps.img.outputs.name }}:latest
+          cache-from: type=gha,scope=addon-${{ matrix.arch }}
+          cache-to: type=gha,scope=addon-${{ matrix.arch }},mode=max
