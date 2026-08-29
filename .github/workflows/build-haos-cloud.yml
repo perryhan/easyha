@@ -65,7 +65,7 @@ jobs:
           p = 'buildroot/boot/uboot/uboot.mk'
           s = open(p, encoding='utf-8').read()
           new, n = re.subn(
-              r"(BR2_TARGET_UBOOT_NEEDS_ATF_BL31\),y\n\t?)UBOOT_DEPENDENCIES \+= rockchip-blobs",
+              r"(BR2_TARGET_UBOOT_NEEDS_ATF_BL31\),y\)\n\t?)UBOOT_DEPENDENCIES \+= rockchip-blobs",
               r"\1UBOOT_DEPENDENCIES += arm-trusted-firmware",
               s, count=1)
           assert n == 1, "uboot.mk 的 rockchip-blobs 依赖未找到——上游结构变了，需要人工复核"
