@@ -30,6 +30,8 @@ jobs:
         uses: home-assistant/builder@master
         with:
           args: |
-            --all \
+            --aarch64 \
+            --armv7 \
+            --amd64 \
             --token ${{ secrets.GITHUB_TOKEN }} \
             ${{ github.workspace }}/addons /data
