@@ -18,7 +18,9 @@
 // ============================================================
 
 /dts-v1/;
-#include "sun50i-h616.dtsi"
+// CUSTOM_DTS_PATH 会被拷入内核 arch/arm64/boot/dts/ 根目录编译，
+// 用 include-prefixes 角括号形式跨目录引用 h616 dtsi
+#include <arm64/allwinner/sun50i-h616.dtsi>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 

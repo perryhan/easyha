@@ -42,7 +42,9 @@ BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="$(BR2_EXTERNAL_HAOS_PATH)/board/allwinner/k
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_HAOS_PATH)/kernel/v6.18.y/haos.config $(BR2_EXTERNAL_HAOS_PATH)/kernel/v6.18.y/docker.config $(BR2_EXTERNAL_HAOS_PATH)/kernel/v6.18.y/device-support.config $(BR2_EXTERNAL_HAOS_PATH)/kernel/v6.18.y/device-support-wireless.config"
 BR2_LINUX_KERNEL_LZ4=y
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
-BR2_LINUX_KERNEL_INTREE_DTS_NAME="allwinner/sun50i-h618-easybox"
+# 自定义 DTS（不在内核树内）：buildroot 会拷入内核源码并用 cpp include-prefixes 编译，
+# 因此 DTS 内用 #include <arm64/allwinner/sun50i-h616.dtsi> 跨目录引用
+BR2_LINUX_KERNEL_CUSTOM_DTS_PATH="$(BR2_EXTERNAL_HAOS_PATH)/board/allwinner/h618box/sun50i-h618-easybox.dts"
 BR2_LINUX_KERNEL_DTB_OVERLAY_SUPPORT=y
 BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
 BR2_LINUX_KERNEL_NEEDS_HOST_LIBELF=y

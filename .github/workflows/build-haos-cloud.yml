@@ -51,8 +51,9 @@ jobs:
       - name: Build h618_box
         working-directory: haos
         run: |
+          sudo mkdir -p /cache/dl /cache/cc
+          sudo chown -R $(id -u):$(id -g) /cache
           docker build -t hassos-builder .
-          mkdir -p /cache/dl /cache/cc
           docker run --rm --privileged \
             -v "$(pwd):/build" -v /cache:/cache hassos-builder \
             bash -c "make h618_box"
