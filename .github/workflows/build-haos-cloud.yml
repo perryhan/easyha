@@ -62,7 +62,7 @@ jobs:
           # Allwinner 的 bl31 应来自 arm-trusted-firmware。带断言替换，改不动就报错。
           python3 - <<'PYEOF'
           import re
-          p = 'boot/uboot/uboot.mk'
+          p = 'buildroot/boot/uboot/uboot.mk'
           s = open(p, encoding='utf-8').read()
           new, n = re.subn(
               r"(BR2_TARGET_UBOOT_NEEDS_ATF_BL31\),y\n\t?)UBOOT_DEPENDENCIES \+= rockchip-blobs",
