@@ -19,6 +19,8 @@ from urllib.parse import parse_qs, urlparse
 
 PORT = int(os.environ.get("PORT", "80"))
 AP_SSID = os.environ.get("AP_SSID", "EasyHA-Setup")
+# 与机身贴纸二维码一致（WIFI: 二维码携带此密码，手机扫码即连热点）
+AP_PASSWORD = os.environ.get("AP_PASSWORD", "easyha2026")
 DONE_FLAG = Path("/run/easyha/wifi.done")
 WWW = Path("/opt/easyha/www")
 WIFI_IFACE = os.environ.get("WIFI_IFACE", "wlan0")
@@ -82,9 +84,13 @@ def net_status():
 
 
 def start_ap():
-    ok, msgout = sh_ok(["nmcli", "connection", "add", "type", "wifi", "ifname", WIFI_IFACE,
-                        "con-name", "easyha-ap", "autoconnect", "no", "mode", "ap",
-                        "ssid", AP_SSID, "ipv4.method", "shared", "ipv6.method", "ignore"])
+    args = ["nmcli", "connection", "add", "type", "wifi", "ifname", WIFI_IFACE,
+            "con-name", "easyha-ap", "autoconnect", "no", "mode", "ap",
+            "ssid", AP_SSID, "ipv4.method", "shared", "ipv6.method", "ignore"]
+    if AP_PASSWORD:
+        args += ["802-11-wireless-security.key-mgmt", "wpa-psk",
+                 "802-11-wireless-security.psk", AP_PASSWORD]
+    ok, msgout = sh_ok(args)
     if not ok:
         print("[preportal] 创建热点失败:", msgout, flush=True)
         return False

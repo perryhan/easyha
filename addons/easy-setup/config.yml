@@ -39,8 +39,8 @@ options:
   language: zh
   timezone: Asia/Shanghai
   ap_ssid: EasyHA-Setup
-  # 为空则热点免密（推荐，配置窗口极短）；要更稳可设 8 位以上密码
-  ap_password: ""
+  # 热点密码与机身贴纸二维码一致（量产可按批次印刷）
+  ap_password: "easyha2026"
   auto_start_ap: true
   china_mirrors:
     - "https://ghfast.top/"

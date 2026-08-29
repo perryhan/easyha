@@ -39,7 +39,9 @@ if wait_ethernet && have_network; then
 else
   log "无网络，启动配网热点与门户"
   rm -f "$DONE_FLAG"
-  python3 /opt/easyha/preportal/server.py >> /var/log/easyha-portal.log 2>&1 &
+  AP_SSID="${AP_SSID:-EasyHA-Setup}" AP_PASSWORD="${AP_PASSWORD:-easyha2026}" \
+    WIFI_IFACE="$WLAN" python3 /opt/easyha/preportal/server.py \
+    >> /var/log/easyha-portal.log 2>&1 &
   PORTAL_PID=$!
   log "等待用户在门户中完成 WiFi 配置（最长 40 分钟）"
   for _ in $(seq 1 800); do

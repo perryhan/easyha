@@ -1,21 +1,32 @@
 # 03 · 扫码配网流程（手机直连 WiFi 初始化）
 
-## 用户视角（全程手机，5 步）
+## 用户视角（全程无网线，5 步）
 
 ```mermaid
 sequenceDiagram
   participant U as 手机
+  participant S as 机身贴纸二维码
   participant D as 设备(EasyHA)
   participant H as 家庭路由器
 
-  U->>D: ① 扫机身/说明书二维码 http://easyha.local<br/>（或连接热点 EasyHA-Setup 后自动弹页）
-  D-->>U: ② 配置页：附近的 WiFi 列表
-  U->>D: ③ 选择家里 WiFi + 输密码
+  D->>D: ① 通电无网络 → 自动开启热点 EasyHA-Setup
+  U->>S: ② 手机相机扫盒底贴纸二维码<br/>（WIFI: 标准格式，扫码即连热点，免输密码）
+  S-->>U: 自动加入热点
+  D-->>U: ③ 配置页自动弹出（探测请求 302）
+  U->>D: ④ 选择家里 WiFi + 输密码
   D->>H: 连接（NM 持久化，以后开机自动回连）
-  D-->>U: ④ 提示"手机切回家里 WiFi"，展示入口二维码
-  U->>H: 切回家庭 WiFi
-  U->>D: ⑤ 打开 http://easyha.local 继续向导<br/>建账号 → 一键装机 → 完成页二维码（:8123）
+  D-->>U: ⑤ 提示"手机切回家里 WiFi"，扫码/访问 http://easyha.local 继续<br/>建号 → 一键装机 → 完成页二维码（:8123）
 ```
+
+### 贴纸二维码的关键设计
+
+- 内容是标准 **`WIFI:T:WPA;S:EasyHA-Setup;P:easyha2026;;`** 格式：
+  手机相机原生识别并**直接连入热点**——"扫码"同时完成了"找到热点 + 输对密码"两步，
+  这是全程无网线体验的核心。模板与印刷规格见 `hardware/sticker/`。
+- 热点名/密码出厂固定并印在贴纸上；量产如需一机一码防蹭配网，改用随箱可变数据印刷，
+  固件默认值同步按批次更新即可（机制已按可配置实现）。
+- 说明书二维码（`http://easyha.local`）作为兜底入口：热点名固定 + 免记忆域名，
+  同样可全批量印刷。
 
 ## 技术细节
 
@@ -28,10 +39,11 @@ sequenceDiagram
   HAOS（路线 A）宿主机没有 dnsmasq，可能不自动弹窗 —— 用户手动开二维码地址即可（二维码
   内容就是门户地址，这也是把二维码印在机身/说明书上的原因）。
 
-### 二维码内容为什么是固定的 `http://easyha.local`
-- 热点名固定（`EasyHA-Setup`）、免密，mDNS 域名固定 `easyha.local`，
-  因此**一台设备一张标签即可量产**，不需要每台生成动态二维码。
-- mDNS 由两处保证：引导阶段 avahi-daemon（路线 B）；插件阶段 python3-zeroconf（注册 A 记录）。
+### 二维码内容为什么可以固定
+- 热点名固定（`EasyHA-Setup`）+ 密码按批次固定并印在贴纸 → **一张设计稿全批量印刷**；
+  mDNS 域名固定 `easyha.local`，兜底二维码同样可量产印刷。
+- mDNS 由两处保证：引导阶段 avahi/dnsmasq（路线 B）+ HAOS 首启配网期的 dnsmasq
+  address= 注入（路线 C）；插件阶段 python3-zeroconf（注册 A 记录）。
 - IP 直连兜底：完成页与向导多处同时展示当前 IP 地址。
 
 ### 连接失败自愈

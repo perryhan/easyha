@@ -61,7 +61,7 @@ function screenWelcome() {
       <p class="sub">整个过程约 3 分钟，完成后你的手机就能像米家一样控制全屋设备。</p>
       ${online ? tip('ok', `设备已联网（${s.mode === 'wifi' ? 'WiFi: ' + esc(s.wifi?.ssid || '') : '有线'}），可以直接完成初始化。`)
                : needWifi ? `<div class="tip">${s.mode === 'ap'
-                 ? `请先用手机连接热点 <b>${esc(s.ap?.ssid || 'EasyHA-Setup')}</b>，然后选择家里的 WiFi。`
+                 ? `请先用手机<b>扫描机身贴纸二维码</b>连接热点 <b>${esc(s.ap?.ssid || 'EasyHA-Setup')}</b>${s.ap?.psk ? `（密码 <b>${esc(s.ap.psk)}</b>，已印在贴纸上）` : ''}，然后选择家里的 WiFi。`
                  : '设备尚未联网，请先完成 WiFi 配置。'}</div>` : ''}
       <div id="msg"></div>
       ${needWifi
