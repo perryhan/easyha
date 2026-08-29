@@ -1,0 +1,22 @@
+# 保证 Linux 构建相关文件永远 LF（CRLF 会让 bash/defconfig 解析失败）
+* text=auto
+*.sh   text eol=lf
+*.ush  text eol=lf
+*.py   text eol=lf
+*.js   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.cfg  text eol=lf
+*.mk   text eol=lf
+meta   text eol=lf
+*defconfig text eol=lf
+*.dts  text eol=lf
+*.config text eol=lf
+*.xz binary
+*.png binary
+*.bin binary
