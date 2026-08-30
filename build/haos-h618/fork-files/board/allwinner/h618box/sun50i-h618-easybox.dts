@@ -10,8 +10,10 @@
 
 /dts-v1/;
 
-#include "sun50i-h616-orangepi-zero.dtsi"
-#include "sun50i-h616-cpu-opp.dtsi"
+// CUSTOM_DTS_PATH 拷入 arch/arm64/boot/dts/ 根目录编译，
+// 引用子目录文件需走 include-prefixes 角括号形式
+#include <arm64/allwinner/sun50i-h616-orangepi-zero.dtsi>
+#include <arm64/allwinner/sun50i-h616-cpu-opp.dtsi>
 
 / {
 	model = "EasyHA Box (H618)";
