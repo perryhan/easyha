@@ -82,6 +82,17 @@ jobs:
           docker run --rm --privileged \
             -v "$(pwd):/build" -v /cache:/cache hassos-builder \
             bash -c "make h618_box"
+          # ---- 地面真值诊断：容器退出后宿主侧到底有什么 ----
+          echo "=== pwd ==="; pwd
+          echo "=== 宿主侧 build/output/images ==="
+          ls -la build/output/images/ 2>&1 | head -30 || true
+          echo "=== 全树搜镜像产物 ==="
+          find "$(pwd)" -maxdepth 5 \( -name "hassos*" -o -name "*.img.xz" \) 2>/dev/null | head -20 || true
+          echo "=== 收集（未压缩与压缩都收） ==="
+          mkdir -p ../out
+          cp -a build/output/images/hassos-*.img* ../out/ 2>/dev/null || true
+          cp -a build/output/images/*.raucb ../out/ 2>/dev/null || true
+          ls -la ../out/ 2>&1 | head -20 || true
 
       - name: Collect images
         if: always()
