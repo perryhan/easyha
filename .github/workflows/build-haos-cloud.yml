@@ -90,15 +90,15 @@ jobs:
           find "$(pwd)" -maxdepth 5 \( -name "hassos*" -o -name "*.img.xz" \) 2>/dev/null | head -20 || true
           echo "=== 收集（未压缩与压缩都收） ==="
           mkdir -p ../out
-          cp -a build/output/images/hassos-*.img* ../out/ 2>/dev/null || true
-          cp -a build/output/images/*.raucb ../out/ 2>/dev/null || true
+          cp -a output/images/hassos-*.img* ../out/ 2>/dev/null || true
+          cp -a output/images/*.raucb ../out/ 2>/dev/null || true
           ls -la ../out/ 2>&1 | head -20 || true
 
       - name: Collect images
         if: always()
         run: |
           mkdir -p out
-          find haos/build/output/images -name "*.img.xz" -exec cp {} out/ \; || true
+          find haos/output/images -name "*.img.xz" -exec cp {} out/ \; || true
           ls -la out/
 
       - name: Upload artifact
