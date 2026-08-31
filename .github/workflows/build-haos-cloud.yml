@@ -93,7 +93,7 @@ jobs:
         if: always()
         run: |
           mkdir -p out
-          cp -a haos/output/images/hassos-*.img* out/ 2>/dev/null || true
+          cp -a haos/output/images/*.img* out/ 2>/dev/null || true
           cp -a haos/output/images/*.raucb out/ 2>/dev/null || true
           ls -la out/ || true
 
