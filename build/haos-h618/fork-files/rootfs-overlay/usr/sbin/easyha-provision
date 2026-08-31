@@ -14,7 +14,7 @@
 # ============================================================
 set -u
 
-REPO_URL="${EASYHA_REPO:-https://github.com/easyha/easyha}"
+REPO_URL="${EASYHA_REPO:-https://github.com/perryhan/easyha}"
 MARKER="/mnt/data/easyha/.provisioned"
 DONE_FLAG="/run/easyha/wifi.done"
 WLAN="${WIFI_IFACE:-wlan0}"

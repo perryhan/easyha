@@ -1,10 +1,14 @@
-# 云编译：在本仓库触发，克隆官方 operating-system（dev）+ 叠加 fork-files/ → 出 h618_box 镜像
+# 云编译：克隆官方 operating-system（dev）+ 叠加 fork-files/ → 出镜像
+#
+# 两个构建目标：
+#   h618_box        — H618 公版盒子镜像（正式产物）
+#   generic_aarch64 — 官方 QEMU/UEFI 机器 + 我们的 overlay（用于 VM 全流程验证：
+#                     QEMU 无 H618 仿真，但可验证镜像结构/boot/provision/HA/向导）
 #
 # 注意：
-#  - 官方仓库自带 CI 用自托管 runner，fork 后默认不会跑，所以采用“克隆+叠加”方式在本仓库构建
-#  - GitHub 托管 runner 磁盘 ~14GB，先清理预装软件腾出 ~50GB；构建可能逼近 6h 上限，
-#    失败则重跑（dl/ccache 缓存会显著加速第二次）
-name: Build HAOS h618_box (cloud)
+#  - 官方仓库自带 CI 用自托管 runner，fork 后默认不会跑，所以在自己仓库构建
+#  - 托管 runner 磁盘 ~14GB，先清理预装软件；构建可能 2~6 小时，失败重跑（缓存加速）
+name: Build HAOS images (cloud)
 
 on:
   workflow_dispatch:
@@ -18,11 +22,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [h618_box, generic_aarch64]
     steps:
       - name: Checkout (easyha)
         uses: actions/checkout@v4
 
-      - name: Free disk space (~50GB)
+      - name: Free disk space
         run: |
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
             /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/share/swift || true
@@ -35,8 +43,8 @@ jobs:
           path: |
             /cache/dl
             /cache/cc
-          key: haos-h618-${{ github.run_id }}
-          restore-keys: haos-h618-
+          key: haos-${{ matrix.machine }}-${{ github.run_id }}
+          restore-keys: haos-${{ matrix.machine }}- ; haos-h618_box-
           save-always: true
 
       - name: Clone upstream operating-system
@@ -47,19 +55,17 @@ jobs:
       - name: Overlay machine files
         working-directory: haos
         run: |
-          # fork-files/ 的目录结构与 buildroot-external/ 一一对应
           rsync -a ../build/haos-h618/fork-files/ buildroot-external/
-          echo "=== 确认机器文件落位 ==="
+          echo "=== 机器文件落位校验 ==="
           ls buildroot-external/configs/ | grep h618_box
           test -f buildroot-external/board/allwinner/h618box/meta
           test -f buildroot-external/board/allwinner/h618box/sun50i-h618-easybox.dts
           test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-provision
+          test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-portal.py
 
       - name: Patch buildroot uboot dep (rockchip-blobs → arm-trusted-firmware)
         working-directory: haos
         run: |
-          # fork 的 uboot.mk 把 ATF_BL31 的依赖硬编码为 rockchip-blobs（瑞芯微盒子），
-          # Allwinner 的 bl31 应来自 arm-trusted-firmware。带断言替换，改不动就报错。
           python3 - <<'PYEOF'
           import re
           p = 'buildroot/boot/uboot/uboot.mk'
@@ -73,7 +79,7 @@ jobs:
           print("uboot.mk 依赖已改接 arm-trusted-firmware")
           PYEOF
 
-      - name: Build h618_box
+      - name: Build ${{ matrix.machine }}
         working-directory: haos
         run: |
           sudo mkdir -p /cache/dl /cache/cc
@@ -81,31 +87,21 @@ jobs:
           docker build -t hassos-builder .
           docker run --rm --privileged \
             -v "$(pwd):/build" -v /cache:/cache hassos-builder \
-            bash -c "make h618_box"
-          # ---- 地面真值诊断：容器退出后宿主侧到底有什么 ----
-          echo "=== pwd ==="; pwd
-          echo "=== 宿主侧 build/output/images ==="
-          ls -la build/output/images/ 2>&1 | head -30 || true
-          echo "=== 全树搜镜像产物 ==="
-          find "$(pwd)" -maxdepth 5 \( -name "hassos*" -o -name "*.img.xz" \) 2>/dev/null | head -20 || true
-          echo "=== 收集（未压缩与压缩都收） ==="
-          mkdir -p ../out
-          cp -a output/images/hassos-*.img* ../out/ 2>/dev/null || true
-          cp -a output/images/*.raucb ../out/ 2>/dev/null || true
-          ls -la ../out/ 2>&1 | head -20 || true
+            bash -c "make ${{ matrix.machine }}"
 
       - name: Collect images
         if: always()
         run: |
           mkdir -p out
-          find haos/output/images -name "*.img.xz" -exec cp {} out/ \; || true
-          ls -la out/
+          cp -a haos/output/images/hassos-*.img* out/ 2>/dev/null || true
+          cp -a haos/output/images/*.raucb out/ 2>/dev/null || true
+          ls -la out/ || true
 
       - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hassos-h618-box
-          path: out/*.img.xz
+          name: hassos-${{ matrix.machine }}
+          path: out/*
           retention-days: 14
           if-no-files-found: warn
