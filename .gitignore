@@ -9,3 +9,6 @@ build/haos-h618/uboot-spl-*.bin
 build/haos-h618/pcdn.dtb
 build/haos-h618/pcdn-reference.dts
 build/haos-h618/board-info-dump*.txt
+
+# 镜像产物
+out/
