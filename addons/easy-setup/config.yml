@@ -31,9 +31,10 @@ hassio_api: true
 hassio_role: admin
 homeassistant_api: true
 
+# 80 端口在标准 HAOS 上被 Supervisor API 占用，插件门户映射到 8080
 ports:
-  80/tcp: 80
-webui: http://[HOST]:[PORT:80]
+  8080/tcp: 80
+webui: http://[HOST]:[PORT:8080]
 
 options:
   language: zh

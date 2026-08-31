@@ -1,0 +1,7 @@
+[04:13:41] 解压镜像
+[04:13:57] QEMU 启动 pid=421
+[04:13:57] t=0min att=1 provision行= HA=000 portal=000 serial=行
+[04:14:57] t=1min att=1 provision行=0 HA=000 portal=000 serial=454行
+[04:15:57] t=2min att=1 provision行=0 HA=302 portal=200 serial=454行
+[04:15:57] 🎉 门户已上线 — 全链路验证通过
+[04:15:57] watch 退出
