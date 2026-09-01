@@ -1,0 +1,103 @@
+
+[驱动] === 驱动 v2 启动 ===
+
+[驱动] 串口已连接
+[    7.856648] audit: type=1130 audit(1788218523.788:21): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=zram-tmp comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    7.870705] audit: type=1130 audit(1788218523.800:22): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=zram-var comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    7.982017] audit: type=1130 audit(1788218523.912:23): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=haos-overlay comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+
+[驱动] === 驱动 v2 启动 ===
+
+[驱动] 串口已连接
+[    8.115745] audit: type=1130 audit(1788220373.052:14): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=zram-tmp comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    8.121776] audit: type=1130 audit(1788220373.056:15): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=zram-var comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    8.174464] audit: type=1130 audit(1788220373.104:16): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=haos-overlay comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+
+Welcome to Home Assistant
+homeassistant login: 
+[驱动] 控制台状态(轮 1): login
+root
+Welcome to [01;34mHome Assistant OS[00m.
+
+Use `ha` to access the Home Assistant CLI.
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+[驱动] 登录后状态: None
+
+[驱动] [未能进入 shell，dump 缓冲后退出]
+
+[驱动] === 驱动 v2 启动 ===
+
+[驱动] 串口已连接
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+[驱动] 控制台状态(轮 1): None
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+[驱动] === 驱动 v2 启动 ===
+
+# 
+[驱动] 串口已连接
+
+# 
+[驱动] 控制台状态(轮 2): None
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+[驱动] 控制台状态(轮 1): None
+
+# 
+# 
+[驱动] 控制台状态(轮 3): None
+
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+[驱动] 控制台状态(轮 2): None
+

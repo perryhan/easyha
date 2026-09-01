@@ -56,12 +56,18 @@ jobs:
         working-directory: haos
         run: |
           rsync -a ../build/haos-h618/fork-files/ buildroot-external/
+          # provision 服务的启用链接必须在构建期进入 rootfs（Windows 检出不带 symlink，
+          # 且 buildroot 自动 enable 不覆盖 overlay 单元 —— VM 验证抓出的缺失项）
+          mkdir -p buildroot-external/rootfs-overlay/etc/systemd/system/multi-user.target.wants
+          ln -sf /usr/lib/systemd/system/easyha-provision.service \
+            buildroot-external/rootfs-overlay/etc/systemd/system/multi-user.target.wants/easyha-provision.service
           echo "=== 机器文件落位校验 ==="
           ls buildroot-external/configs/ | grep h618_box
           test -f buildroot-external/board/allwinner/h618box/meta
           test -f buildroot-external/board/allwinner/h618box/sun50i-h618-easybox.dts
           test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-provision
           test -f buildroot-external/rootfs-overlay/usr/sbin/easyha-portal.py
+          test -L buildroot-external/rootfs-overlay/etc/systemd/system/multi-user.target.wants/easyha-provision.service
 
       - name: Patch buildroot uboot dep (rockchip-blobs → arm-trusted-firmware)
         working-directory: haos

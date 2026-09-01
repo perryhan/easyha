@@ -1,0 +1,27 @@
+=== 驱动 v2 启动 ===
+串口已连接
+Traceback (most recent call last):
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 160, in <module>
+    main()
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 93, in main
+    state = ser.fresh_prompt()
+            ^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 75, in fresh_prompt
+    p = self.wait([r"homeassistant login:", r"hassio>", r"root@homeassistant"], 25)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 60, in wait
+    raise ConnectionError("串口关闭")
+ConnectionError: 串口关闭
+=== 驱动 v2 启动 ===
+串口已连接
+控制台状态(轮 1): login
+登录后状态: None
+[未能进入 shell，dump 缓冲后退出]
+=== 驱动 v2 启动 ===
+串口已连接
+控制台状态(轮 1): None
+=== 驱动 v2 启动 ===
+串口已连接
+控制台状态(轮 2): None
+控制台状态(轮 1): None
+控制台状态(轮 3): None

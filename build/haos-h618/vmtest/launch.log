@@ -1,0 +1,19 @@
+=== 全新解压 ===
+Image resized.
+=== 启动 QEMU（串口 tcp:4444）===
+QEMU OK
+=== 串口驱动 v2（前台保持会话）===
+=== 驱动 v2 启动 ===
+串口已连接
+Traceback (most recent call last):
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 160, in <module>
+    main()
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 93, in main
+    state = ser.fresh_prompt()
+            ^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 75, in fresh_prompt
+    p = self.wait([r"homeassistant login:", r"hassio>", r"root@homeassistant"], 25)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/serial-driver-v2.py", line 60, in wait
+    raise ConnectionError("串口关闭")
+ConnectionError: 串口关闭

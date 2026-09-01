@@ -1,0 +1,69 @@
+
+=== 等待 QEMU 串口就绪 ===
+
+已连接串口
+[    6.518291] audit: type=1130 audit(1788217464.480:16): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=systemd-fsck@dev-disk-by\x2dlabel-hassos\x2dboot comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    6.591467] audit: type=1130 audit(1788217464.556:17): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=systemd-fsck@dev-disk-by\x2dlabel-hassos\x2doverlay comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    6.641305] audit: type=1130 audit(1788217464.604:18): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=systemd-fsck@dev-disk-by\x2dlabel-hassos\x2ddata comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    6.919390] EXT4-fs (vda7): mounted filesystem 722c53a4-0c0e-409a-b4e3-b480a4ca350b r/w with ordered data mode. Quota mode: none.
+
+Welcome to Home Assistant
+homeassistant login: root
+Welcome to [01;34mHome Assistant OS[00m.
+
+Use `ha` to access the Home Assistant CLI.
+# login
+
+
+>>> echo ===PROVISION-STATUS===; systemctl status easyha-provision --no-pager | head -12
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===PROVISION-JOURNAL===; journalctl -u easyha-provision --no-pager | tail -30
+echo ===PROVISION-JOURNAL===; journalctl -u easyha-provision --no-pager | tail -30
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===DOCKER===; docker ps -a 2>/dev/null | head -8
+echo ===DOCKER===; docker ps -a 2>/dev/null | head -8
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===HA-ADDONS===; ha addons 2>/dev/null | grep -E 'easy|name|slug' | head -10
+echo ===HA-ADDONS===; ha addons 2>/dev/null | grep -E 'easy|name|slug' | head -10
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===STORE===; ha store 2>/dev/null | head -5
+echo ===STORE===; ha store 2>/dev/null | head -5
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===PORTS===; ss -tlnp | grep -E ':80 |:8080|:8123|:4357'
+echo ===PORTS===; ss -tlnp | grep -E ':80 |:8080|:8123|:4357'
+
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===DISK===; df -h /mnt/data /tmp
+echo ===DISK===; df -h /mnt/data /tmp
+Password: 
+
+>>> echo ===MARKER===; ls -la /mnt/data/easyha/ 2>/dev/null
+
+Login incorrect
+
+homeassistant login: login: timed out after 60 seconds
+Welcome to Home Assistant
+homeassistant login: 
+
+>>> echo ===DIAG-DONE===
+echo ===DIAG-DONE===
+
+
+=== 诊断完成，进入持续观察模式（每 60s 输出一次快照） ===

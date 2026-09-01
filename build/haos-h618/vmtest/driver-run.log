@@ -1,0 +1,22 @@
+=== 等待 QEMU 串口就绪 ===
+已连接串口
+
+>>> echo ===PROVISION-STATUS===; systemctl status easyha-provision --no-pager | head -12
+
+>>> echo ===PROVISION-JOURNAL===; journalctl -u easyha-provision --no-pager | tail -30
+
+>>> echo ===DOCKER===; docker ps -a 2>/dev/null | head -8
+
+>>> echo ===HA-ADDONS===; ha addons 2>/dev/null | grep -E 'easy|name|slug' | head -10
+
+>>> echo ===STORE===; ha store 2>/dev/null | head -5
+
+>>> echo ===PORTS===; ss -tlnp | grep -E ':80 |:8080|:8123|:4357'
+
+>>> echo ===DISK===; df -h /mnt/data /tmp
+
+>>> echo ===MARKER===; ls -la /mnt/data/easyha/ 2>/dev/null
+
+>>> echo ===DIAG-DONE===
+
+=== 诊断完成，进入持续观察模式（每 60s 输出一次快照） ===
