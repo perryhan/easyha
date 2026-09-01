@@ -61,6 +61,10 @@ jobs:
           mkdir -p buildroot-external/rootfs-overlay/etc/systemd/system/multi-user.target.wants
           ln -sf /usr/lib/systemd/system/easyha-provision.service \
             buildroot-external/rootfs-overlay/etc/systemd/system/multi-user.target.wants/easyha-provision.service
+          # Windows git 丢失可执行位 —— 构建期补回（否则 ExecStart Permission denied）
+          chmod +x buildroot-external/rootfs-overlay/usr/sbin/easyha-provision \
+                  buildroot-external/rootfs-overlay/usr/sbin/easyha-portal.py
+          find buildroot-external/rootfs-overlay -name "*.sh" -exec chmod +x {} +
           echo "=== 机器文件落位校验 ==="
           ls buildroot-external/configs/ | grep h618_box
           test -f buildroot-external/board/allwinner/h618box/meta
