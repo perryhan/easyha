@@ -73,21 +73,20 @@ done
 [[ -z "$ok" ]] && { log "Supervisor 未就绪，下次启动重试"; exit 0; }
 
 # 多源依次注册（中国网络环境：GitHub 直连常不通，走加速器）
+# 注意：本脚本以 #!/bin/sh（busybox ash）运行，不能用 bash 数组
 REPO_BASE="${EASYHA_REPO:-https://github.com/perryhan/easyha}"
-REPO_URLS=(
-    "$REPO_BASE"
-    "https://gh-proxy.com/$REPO_BASE"
-    "https://ghfast.top/$REPO_BASE"
-)
+REPO_LIST="$REPO_BASE
+https://gh-proxy.com/$REPO_BASE
+https://ghfast.top/$REPO_BASE"
 store_ok=""
-for u in "${REPO_URLS[@]}"; do
+for u in $REPO_LIST; do
     log "尝试注册插件仓库: $u"
     if timeout 180 ha store add "$u"; then store_ok="$u"; break; fi
     sleep 10
 done
 if [ -z "$store_ok" ]; then
-    log "所有仓库源注册失败（网络受限），5 分钟后重试一轮"
-    for u in "${REPO_URLS[@]}"; do
+    log "所有仓库源注册失败（网络受限），重试一轮"
+    for u in $REPO_LIST; do
         timeout 180 ha store add "$u" && { store_ok="$u"; break; }
         sleep 10
     done
