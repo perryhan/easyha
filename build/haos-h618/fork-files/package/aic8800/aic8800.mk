@@ -1,34 +1,36 @@
 # ============================================================
-# AIC8800/8801 WiFi 驱动 —— Buildroot 包（模板，USB 形态）
-# ❗TODO：AIC 驱动不在主线。把 SDK 推到你们的私有 git 仓后替换
-#        AIC8800_SITE / AIC8800_SOURCE。SDK 目录形如：
-#          aic8800/aic8800_bsp/        (总线/平台层，含 USB 模式切换)
-#          aic8800/aic8800_fdrv/       (cfg80211 驱动，Kbuild 在此)
-#          aic8800/firmware/           (固件 → /lib/firmware/aic8800*)
-# 本板 AIC8801 走 USB（a69c:5721），启用 CONFIG_AIC8800_USB；
-# 若量产换 SDIO 模组则改启用 SDIO 变体。
+# AIC8800/8801 USB WiFi 驱动 —— buildroot 内核模块包
+# 源码: aic8800dc-linux-patched（Radxa 6.12+ 兼容补丁版，随本包分发）
+# 固件: fw/aic8800D80 → /lib/firmware/aic8800D80
+# 硬件: 本盒子 AIC8801 为 USB 形态（a69c:5721，上电为 MSC U 盘模式，
+#       由 aic_load_fw 完成模式切换），需配合内核 cmdline 的
+#       usb-storage.quirks=a69c:5721:u（已在 board cmdline.txt 中）
 # ============================================================
 
 AIC8800_VERSION = 1.0
-AIC8800_SITE = $(call github,your-org,aic8800-sdk,$(AIC8800_VERSION))
+AIC8800_SITE = $(BR2_EXTERNAL_HAOS_PATH)/package/aic8800/src
+AIC8800_SITE_METHOD = local
 AIC8800_LICENSE = GPL-2.0
 AIC8800_DEPENDENCIES = linux
 
-AIC8800_MODULE_SUBDIRS = aic8800_bsp aic8800_fdrv
+# 两个模块均构建为 .ko；CONFIG_PLATFORM_UBUNTU 分支适配主线内核构建
+AIC8800_MODULE_MAKE_OPTS = \
+	CONFIG_AIC_LOADFW_SUPPORT=m \
+	CONFIG_AIC8800_WLAN_SUPPORT=m \
+	CONFIG_PLATFORM_UBUNTU=y \
+	USER_EXTRA_CFLAGS="-Wno-error"
 
-define AIC8800_LINUX_CONFIG_FIXUPS
-	$(call KCONFIG_ENABLE_OPT,CONFIG_WLAN)
-	$(call KCONFIG_ENABLE_OPT,CONFIG_CFG80211)
-	$(call KCONFIG_ENABLE_OPT,CONFIG_MAC80211)
-	$(call KCONFIG_ENABLE_OPT,CONFIG_USB_SUPPORT)
-endef
-
-# USB MSC → WLAN 的模式切换依赖 udev/驱动内逻辑；固件必须与驱动配套
 define AIC8800_INSTALL_FIRMWARE
-	mkdir -p $(TARGET_DIR)/lib/firmware/aic8800
-	cp -r $(@D)/firmware/. $(TARGET_DIR)/lib/firmware/aic8800/
+	mkdir -p $(TARGET_DIR)/lib/firmware/aic8800D80
+	cp -r $(AIC8800_PKGDIR)/firmware/aic8800D80/. $(TARGET_DIR)/lib/firmware/aic8800D80/
 endef
 AIC8800_POST_INSTALL_TARGET_HOOKS += AIC8800_INSTALL_FIRMWARE
+
+define AIC8800_INSTALL_MODULES_LOAD
+	mkdir -p $(TARGET_DIR)/etc/modules-load.d
+	printf 'aic_load_fw\naic8800_fdrv\n' > $(TARGET_DIR)/etc/modules-load.d/aic8800.conf
+endef
+AIC8800_POST_INSTALL_TARGET_HOOKS += AIC8800_INSTALL_MODULES_LOAD
 
 $(eval $(kernel-module))
 $(eval $(generic-package))

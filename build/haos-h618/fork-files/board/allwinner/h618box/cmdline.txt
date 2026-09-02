@@ -1,1 +1,1 @@
-console=ttyS0,115200 console=tty0
+console=ttyS0,115200 console=tty0 usb-storage.quirks=a69c:5721:u

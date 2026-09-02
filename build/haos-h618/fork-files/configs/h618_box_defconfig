@@ -174,3 +174,6 @@ BR2_PACKAGE_HOST_TEMPIO=y
 BR2_PACKAGE_UDISKS2=y
 
 # 构建触发标记（保留）
+
+# ---- AIC8801 USB WiFi 驱动（本盒内置模组）----
+BR2_PACKAGE_AIC8800=y
