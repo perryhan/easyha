@@ -91,6 +91,21 @@ if [ -z "$store_ok" ]; then
         sleep 10
     done
 fi
+
+# 仓库克隆成功后商店数据刷新是异步的：轮询等待插件在商店可见（最长 10 分钟）
+log "等待 easy_setup 在商店可见..."
+addon_visible=""
+for _ in $(seq 1 40); do
+    if ha addons info easy_setup >/dev/null 2>&1; then
+        addon_visible=1
+        log "插件已在商店可见 ✓"
+        break
+    fi
+    sleep 15
+done
+if [ -z "$addon_visible" ]; then
+    log "插件未在商店出现（注册或网络异常），跳过自动安装"
+fi
 for _ in 1 2 3; do
     timeout 900 ha addons install easy_setup && break
     sleep 30
