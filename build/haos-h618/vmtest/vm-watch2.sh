@@ -1,7 +1,7 @@
 #!/bin/bash
 D=/var/opt/haos-vm
 LOG=/mnt/c/Users/34236/.zcode/workspace/default/easyha/build/haos-h618/vmtest/vm-status2.log
-IMG=/mnt/c/Users/34236/.zcode/workspace/default/easyha/out/vmtest5/haos_generic-aarch64-18.3.dev0.img.xz
+IMG=/mnt/c/Users/34236/.zcode/workspace/default/easyha/out/vmtest6/haos_generic-aarch64-18.3.dev0.img.xz
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 
 mkdir -p $D
